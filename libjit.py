@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+from pathlib import Path
 
 parser = argparse.ArgumentParser(
         prog='jit',
@@ -12,10 +13,25 @@ subparsers = parser.add_subparsers(title='subcommands', dest='subcommand')
 jit_parser = subparsers.add_parser('init', help='Initialize a new repository')
 jit_parser.add_argument('path', nargs='?', default= '.')
 def cmd_init(args):
-    dirs = ['.jit', '.jit/objects', '.jit/refs/heads', '.jit/refs/tags']
-    [os.makedirs(os.path.join(args.path, dir)) for dir in dirs]
-    with open(os.path.join(args.path, '.jit', 'HEAD'), 'w') as f:
+    p = Path(args.path)
+    dirs = ['.jit/objects', '.jit/refs/heads', '.jit/refs/tags']
+
+    message = f'Reinitialized existing Jit repository in {(p / '.jit').resolve()}'
+    
+    for dir in dirs:
+        p_dir = p / dir
+        p_dir.mkdir(parents=True, exist_ok=True)
+    
+    if (p / '.jit' / 'HEAD').exists():
+        print(message)
+        return
+
+    message = f'Initialized empty Jit repository in {(p / '.jit').resolve()}'
+
+    with open((p / '.jit' / 'HEAD'), 'w') as f:
         f.write('ref: refs/heads/main')
+    
+    print(message)
 
 def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
